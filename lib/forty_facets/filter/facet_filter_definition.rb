@@ -63,9 +63,11 @@ module FortyFacets
         my_column = definition.qualified_column_name
         query = "#{my_column} AS facet_value, count(#{my_column}) AS occurrences"
         top = definition.options[:top]
+        skip_distinct = definition.options[:skip_distinct]
 
-        counts = without.result(skip_ordering: true).distinct.joins(definition.joins).select(query).group(my_column)
+        counts = without.result(skip_ordering: true).joins(definition.joins).select(query).group(my_column)
         counts = counts.order(occurrences: :desc).limit(top) if top
+        counts = skip_distinct ? counts.distinct(nil) : counts.distinct
         counts.includes_values = []
         facet = counts.map do |c|
           is_selected = selected.include?(c.facet_value)
